@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: order
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+        - id: inventory
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+    discovery:
+      locator:
+        enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka
