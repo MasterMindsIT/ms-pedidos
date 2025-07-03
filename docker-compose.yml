@@ -9,6 +9,8 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - microservices-net
 
   # -----------------------------
   # Kafka Broker
@@ -24,6 +26,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - microservices-net
 
   # -----------------------------
   # Eureka Server
@@ -34,6 +38,8 @@ services:
       context: ./eureka-server
     ports:
       - "8761:8761"
+    networks:
+      - microservices-net
 
   # -----------------------------
   # Spring Cloud Config Server
@@ -46,6 +52,8 @@ services:
       - "8888:8888"
     volumes:
       - ./config-repo:/config-repo
+    networks:
+      - microservices-net
 
   # -----------------------------
   # Spring Cloud Gateway
@@ -59,6 +67,8 @@ services:
       - config-server
     ports:
       - "8080:8080"
+    networks:
+      - microservices-net
 
   # -----------------------------
   # Zipkin for tracing
@@ -67,6 +77,8 @@ services:
     image: openzipkin/zipkin:2.24
     ports:
       - "9411:9411"
+    networks:
+      - microservices-net
 
   # -----------------------------
   # Prometheus
@@ -77,6 +89,8 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    networks:
+      - microservices-net
 
   # -----------------------------
   # Grafana
@@ -87,6 +101,8 @@ services:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - microservices-net
 
   # -----------------------------
   # Loki for centralized logs
@@ -96,6 +112,8 @@ services:
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - microservices-net
 
   # -----------------------------
   # Promtail to ship logs to Loki
@@ -107,6 +125,8 @@ services:
       - /var/log:/var/log:ro
       - ./promtail/promtail-config.yaml:/etc/promtail/config.yml
     command: -config.file=/etc/promtail/config.yml
+    networks:
+      - microservices-net
 
   # -----------------------------
   # Order Service
@@ -122,6 +142,8 @@ services:
       - eureka-server
       - config-server
       - zipkin
+    networks:
+      - microservices-net
 
   # -----------------------------
   # Inventory Service (3 replicas)
@@ -139,6 +161,8 @@ services:
       - zipkin
     deploy:
       replicas: 3
+    networks:
+      - microservices-net
 
   # -----------------------------
   # Notification Service
@@ -154,3 +178,12 @@ services:
       - eureka-server
       - config-server
       - zipkin
+    networks:
+      - microservices-net
+
+# -----------------------------
+# Network definition
+# -----------------------------
+networks:
+  microservices-net:
+    driver: bridge
