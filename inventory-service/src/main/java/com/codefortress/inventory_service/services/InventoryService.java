@@ -42,7 +42,7 @@ public class InventoryService {
         if (cycle >=6 && cycle <=10){
             try{
                 logger.info("Simulando retraso de 1500 ms en ciclo {}, petición {}", cycle, requestCount);
-                Thread.sleep(1500)
+                Thread.sleep(1500);
             }catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 logger.error("Error al simular retraso", e);
