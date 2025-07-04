@@ -38,6 +38,16 @@ public class InventoryService {
             logger.warn("Simulando error en ciclo {}, petición {}", cycle, requestCount);
             throw new RuntimeException("Error simulado en InventoryService");
         }
+        // Simular un retraso de 100 ms
+        if (cycle >=6 && cycle <=10){
+            try{
+                logger.info("Simulando retraso de 1500 ms en ciclo {}, petición {}", cycle, requestCount);
+                Thread.sleep(1500)
+            }catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.error("Error al simular retraso", e);
+            }
+        }
 
         Integer available = stock.get(productId);
         logger.info("Consultando stock de {}: {}", productId, available);

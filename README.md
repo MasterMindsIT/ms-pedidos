@@ -253,6 +253,23 @@ en un solo comando.
 
 ---
 
+### 🟢 ¿Cómo ejecutas la prueba?
+
+Una vez todo tu stack está corriendo, simplemente:
+
+1️⃣ **Accede al contenedor de k6:**
+
+```bash
+docker compose exec k6 sh
+```
+2️⃣ **Ejecuta el script copiado dentro:**
+```bash
+k6 run /scripts/test.js
+```
+
+
+---
+
 ## ✨ Licencia
 
 Este proyecto es únicamente educativo y puedes usarlo libremente para tus estudios.
