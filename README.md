@@ -255,14 +255,14 @@ en un solo comando.
 
 ### 🟢 ¿Cómo ejecutas la prueba?
 
-Una vez todo tu stack está corriendo, simplemente:
+Una vez todos los servicios esten construidos y corriendo, simplemente:
 
-1️⃣ **Accede al contenedor de k6:**
+1️⃣ **Accede al contenedor de k6 para usar su consola:**
 
 ```bash
 docker compose exec k6 sh
 ```
-2️⃣ **Ejecuta el script copiado dentro:**
+2️⃣ **Ejecuta el script copiado dentro con el comando:**
 ```bash
 k6 run /scripts/test.js
 ```
