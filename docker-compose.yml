@@ -1,4 +1,4 @@
-#version: '3.8'
+# version: '3.8'
 
 services:
   # -----------------------------
@@ -9,8 +9,15 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    restart: unless-stopped
     networks:
       - microservices-net
+    healthcheck:
+      test: ["CMD-SHELL", "echo stat | nc localhost 2181"] # Simple check for Zookeeper
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s # Give Zookeeper some time to start
 
   # -----------------------------
   # Kafka Broker
@@ -18,9 +25,11 @@ services:
   kafka:
     image: confluentinc/cp-kafka:7.3.0
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy # Kafka waits for Zookeeper to be healthy
     ports:
       - "9092:9092"
+    restart: unless-stopped
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -28,18 +37,12 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - microservices-net
-
-  # -----------------------------
-  # Eureka Server
-  # -----------------------------
-  eureka-server:
-    image: eurekaserver:latest
-    build:
-      context: ./eureka-server
-    ports:
-      - "8761:8761"
-    networks:
-      - microservices-net
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"] # Check Kafka connectivity
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s # Kafka takes a bit longer to be fully ready
 
   # -----------------------------
   # Spring Cloud Config Server
@@ -52,23 +55,37 @@ services:
       - "8888:8888"
     volumes:
       - ./config-repo:/config-repo
+    restart: unless-stopped
     networks:
       - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"] # Standard Spring Boot Actuator health check
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s # Give it time to load configs
 
   # -----------------------------
-  # Spring Cloud Gateway
+  # Eureka Server
   # -----------------------------
-  gateway:
-    image: gateway:latest
+  eureka-server:
+    image: eurekaserver:latest
     build:
-      context: ./gateway
+      context: ./eureka-server
     depends_on:
-      - eureka-server
-      - config-server
+      config-server:
+        condition: service_healthy # Eureka needs Config Server to get its config
     ports:
-      - "8080:8080"
+      - "8761:8761"
+    restart: unless-stopped
     networks:
       - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"] # Standard Spring Boot Actuator health check
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s # Give Eureka time to initialize
 
   # -----------------------------
   # Zipkin for tracing
@@ -77,8 +94,15 @@ services:
     image: openzipkin/zipkin:2.24
     ports:
       - "9411:9411"
+    restart: unless-stopped
     networks:
       - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9411/health"] # Zipkin health endpoint
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # -----------------------------
   # Prometheus
@@ -89,8 +113,15 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    restart: unless-stopped
     networks:
       - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/-/ready"] # Prometheus ready check
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # -----------------------------
   # Grafana
@@ -101,8 +132,15 @@ services:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    restart: unless-stopped
     networks:
       - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"] # Grafana API health check
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   # -----------------------------
   # Loki for centralized logs
@@ -112,21 +150,39 @@ services:
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
     networks:
       - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/ready"] # Loki ready check
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # -----------------------------
   # Promtail to ship logs to Loki
   # -----------------------------
   promtail:
     image: grafana/promtail:2.9.1
+    depends_on:
+      loki:
+        condition: service_healthy # Promtail needs Loki to be ready
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/log:/var/log:ro
       - ./promtail/promtail-config.yaml:/etc/promtail/config.yml
     command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
     networks:
       - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9080/ready"] # Promtail readiness endpoint (default port if not changed in config)
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 
   # -----------------------------
   # Order Service
@@ -137,15 +193,28 @@ services:
       context: ./order-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      # Asegúrate de que tus servicios apunten a Eureka para registro
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411
     depends_on:
-      - kafka
-      - eureka-server
-      - config-server
-      - zipkin
-    ports:
-    - "8081:8081"
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
+    restart: unless-stopped
     networks:
       - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"] # Asume que tu servicio está en el puerto 8080. Ajústalo si es diferente.
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s # Puede que los microservicios tomen más tiempo en iniciar y registrarse
 
   # -----------------------------
   # Inventory Service (3 replicas)
@@ -156,17 +225,29 @@ services:
       context: ./inventory-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411
     depends_on:
-      - kafka
-      - eureka-server
-      - config-server
-      - zipkin
-    ports:
-    - "8082:8082"
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
     deploy:
       replicas: 1
+    restart: unless-stopped
     networks:
       - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"] # Asume que tu servicio está en el puerto 8080. Ajústalo si es diferente.
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
   # -----------------------------
   # Notification Service
@@ -177,16 +258,58 @@ services:
       context: ./notification-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411
     depends_on:
-      - kafka
-      - eureka-server
-      - config-server
-      - zipkin
-    ports:
-    - "8083:8083"
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
+    restart: unless-stopped
     networks:
       - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"] # Asume que tu servicio está en el puerto 8080. Ajústalo si es diferente.
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
+  # -----------------------------
+  # Spring Cloud Gateway
+  # -----------------------------
+  gateway:
+    image: gateway:latest
+    build:
+      context: ./gateway
+    # El Gateway DEBE esperar a que los servicios esenciales estén registrados en Eureka
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      order-service: # Ahora el Gateway espera a que AL MENOS un servicio de negocio esté listo
+        condition: service_healthy
+      inventory-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"] # Ajusta el puerto si tu gateway usa otro
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s # El Gateway puede tardar en registrar sus rutas después que los servicios están en Eureka
 
   k6:
     image: grafana/k6
@@ -196,6 +319,9 @@ services:
     tty: true
     networks:
       - microservices-net
+    depends_on:
+      gateway: # k6 debería esperar a que el Gateway esté listo para las pruebas de carga
+        condition: service_healthy
 
 # -----------------------------
 # Network definition
