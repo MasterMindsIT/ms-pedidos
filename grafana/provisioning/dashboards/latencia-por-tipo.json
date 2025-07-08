@@ -1,0 +1,24 @@
+{
+  "id": null,
+  "uid": null,
+  "title": "Latencia simulada por logs",
+  "tags": [
+    "logs",
+    "loki"
+  ],
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "logs",
+      "title": "Mensajes con latencia",
+      "targets": [
+        {
+          "expr": "{job=\"docker\"} |= \"latencia\" or |= \"ms\""
+        }
+      ],
+      "datasource": "Loki"
+    }
+  ],
+  "schemaVersion": 30,
+  "version": 1
+}

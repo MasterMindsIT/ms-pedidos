@@ -1,0 +1,48 @@
+{
+  "id": null,
+  "uid": null,
+  "title": "Correlaci\u00f3n de Carga y Logs",
+  "tags": [
+    "k6",
+    "prometheus",
+    "loki"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 30,
+  "version": 1,
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Latencia promedio (Prometheus)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "avg_over_time(http_request_duration_seconds_sum[1m]) / avg_over_time(http_request_duration_seconds_count[1m])",
+          "legendFormat": "Promedio 1m",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Errores recientes en logs (Loki)",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{level=\"ERROR\"} |= \"Exception\" or |= \"timeout\""
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total errores \u00faltimos 5 minutos",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "count_over_time({level=\"ERROR\"}[5m])",
+          "refId": "B"
+        }
+      ]
+    }
+  ]
+}

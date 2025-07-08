@@ -1,0 +1,29 @@
+<configuration>
+
+  <springProperty scope="context" name="SERVICE_NAME" source="spring.application.name"/>
+
+  <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <timestamp>
+          <timeZone>UTC</timeZone>
+        </timestamp>
+        <logLevel/>
+        <loggerName/>
+        <threadName/>
+        <message/>
+        <stackTrace/>
+        <mdc/>
+        <context>
+          <customFields>{"service":"${SERVICE_NAME}"}</customFields>
+        </context>
+      </providers>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE" />
+  </root>
+</configuration>

@@ -1,0 +1,24 @@
+{
+  "id": null,
+  "uid": null,
+  "title": "Errores y ca\u00eddas",
+  "tags": [
+    "logs",
+    "loki"
+  ],
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "logs",
+      "title": "Servicios no responden",
+      "targets": [
+        {
+          "expr": "{level=\"ERROR\"} |= \"timeout\" or |= \"Connection refused\" or |= \"500\""
+        }
+      ],
+      "datasource": "Loki"
+    }
+  ],
+  "schemaVersion": 30,
+  "version": 1
+}

@@ -1,0 +1,34 @@
+{
+  "id": null,
+  "uid": null,
+  "title": "Logs por Microservicio",
+  "tags": [
+    "logs",
+    "loki"
+  ],
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "logs",
+      "title": "Logs recientes por servicio",
+      "targets": [
+        {
+          "expr": "{service=~\".+\"}"
+        }
+      ],
+      "datasource": "Loki"
+    },
+    {
+      "type": "stat",
+      "title": "Errores por servicio",
+      "targets": [
+        {
+          "expr": "count_over_time({level=\"ERROR\"}[5m]) by (service)"
+        }
+      ],
+      "datasource": "Loki"
+    }
+  ],
+  "schemaVersion": 30,
+  "version": 1
+}
