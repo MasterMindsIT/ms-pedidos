@@ -23,7 +23,7 @@ export default function () {
     },
   };
 
-  let res = http.post('http://localhost:8080/api/orders', payload, params);
+  let res = http.post('http://gateway:8080/api/orders', payload, params);
 
   check(res, {
     'status is 200': (r) => r.status === 200,
