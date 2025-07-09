@@ -1,4 +1,4 @@
-# version: '3.8'
+version: '3.8'
 
 services:
   # -----------------------------
@@ -76,10 +76,10 @@ services:
       config-server:
         condition: service_healthy # Eureka needs Config Server to get its config
     ports:
-      - "8761:8761"
+    - "8761:8761"
     restart: unless-stopped
     networks:
-      - microservices-net
+    - microservices-net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"] # Standard Spring Boot Actuator health check
       interval: 10s
@@ -138,7 +138,8 @@ services:
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"] # Grafana API health check
+      # Usamos wget en lugar de curl, por si la imagen de Grafana no lo tiene
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3000/api/health || exit 1"] # Grafana API health check
       interval: 10s
       timeout: 5s
       retries: 5
@@ -156,7 +157,8 @@ services:
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3100/ready"] # Loki ready check
+      # Usamos wget en lugar de curl
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3100/ready || exit 1"] # Loki ready check
       interval: 10s
       timeout: 5s
       retries: 5
@@ -180,7 +182,8 @@ services:
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9080/ready"] # Promtail readiness endpoint (default port if not changed in config)
+      # Usamos wget en lugar de curl
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:9080/ready || exit 1"] # Promtail readiness endpoint (default port if not changed in config)
       interval: 10s
       timeout: 5s
       retries: 5
@@ -196,28 +199,28 @@ services:
       context: ./order-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      # Asegúrate de que tus servicios apunten a Eureka para registro
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
       SPRING_ZIPKIN_BASEURL: http://zipkin:9411
     depends_on:
-      kafka:
-        condition: service_healthy
       eureka-server:
-        condition: service_healthy
+        condition: service_healthy # Es CRÍTICO que Eureka esté listo para el registro
       config-server:
-        condition: service_healthy
+        condition: service_healthy # Es CRÍTICO para obtener la configuración
+      # Kafka y Zipkin: Los servicios pueden iniciar y manejar reconexiones si no están listos
+      kafka:
+        condition: service_started # Solo esperamos que el contenedor haya iniciado
       zipkin:
-        condition: service_healthy
+        condition: service_started # Solo esperamos que el contenedor haya iniciado
     restart: unless-stopped
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"] # Asume que tu servicio está en el puerto 8080. Ajústalo si es diferente.
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 60s # Puede que los microservicios tomen más tiempo en iniciar y registrarse
+      start_period: 60s
 
   # -----------------------------
   # Inventory Service (3 replicas)
@@ -232,21 +235,21 @@ services:
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
       SPRING_ZIPKIN_BASEURL: http://zipkin:9411
     depends_on:
-      kafka:
-        condition: service_healthy
       eureka-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
+      kafka:
+        condition: service_started
       zipkin:
-        condition: service_healthy
+        condition: service_started
     deploy:
       replicas: 1
     restart: unless-stopped
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"] # Asume que tu servicio está en el puerto 8080. Ajústalo si es diferente.
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -265,19 +268,19 @@ services:
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
       SPRING_ZIPKIN_BASEURL: http://zipkin:9411
     depends_on:
-      kafka:
-        condition: service_healthy
       eureka-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
+      kafka:
+        condition: service_started
       zipkin:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"] # Asume que tu servicio está en el puerto 8080. Ajústalo si es diferente.
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -296,14 +299,24 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      order-service: # Ahora el Gateway espera a que AL MENOS un servicio de negocio esté listo
+      # Los microservicios de negocio: Aquí es donde podemos ser más flexibles.
+      # No necesitas que *todos* estén healthy para que el Gateway inicie.
+      # Un gateway suele configurarse para que si un servicio no está disponible, no le envíe tráfico,
+      # pero no necesariamente detener el propio gateway.
+      # Considera si realmente necesitas que todos los servicios estén HEALTHY antes de que el gateway arranque.
+      # Si el gateway puede manejar que algunos servicios no estén listos al inicio y los descubra más tarde,
+      # puedes usar 'service_started' o incluso omitir la dependencia si el descubrimiento es dinámico.
+      # Para un proyecto educativo y para asegurar un arranque más completo,
+      # mantener 'service_healthy' para uno o dos servicios críticos puede ser útil.
+      # He dejado 'order-service' como healthy y los demás como 'service_started' para ilustrar la flexibilidad.
+      order-service: # El Gateway espera a que AL MENOS un servicio de negocio esté listo para demostrar la funcionalidad
         condition: service_healthy
       inventory-service:
-        condition: service_healthy
+        condition: service_started # No es tan crítico que todos estén HEALTHY para que el Gateway inicie.
       notification-service:
-        condition: service_healthy
+        condition: service_started # El Gateway puede descubrir estos servicios más tarde via Eureka.
     ports:
-      - "8080:8080"
+      - "8080:8080" # Ojo, si tus MS usan el 8080, el gateway usará ese mismo puerto, podría haber conflicto en el host.
     restart: unless-stopped
     networks:
       - microservices-net
