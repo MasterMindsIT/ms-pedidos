@@ -1,4 +1,4 @@
-version: '3.8'
+#version: '3.8'
 
 services:
   # -----------------------------
@@ -216,7 +216,7 @@ services:
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -249,7 +249,7 @@ services:
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -280,7 +280,7 @@ services:
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -331,8 +331,18 @@ services:
     image: grafana/k6
     volumes:
       - ./k6-scripts:/scripts
-    entrypoint: ["/bin/sh"]
+    entrypoint: ["k6", "run", "/scripts/scripts.js"]
+    #entrypoint: ["/bin/sh", "-c"]
+    # command:
+    #   - |
+    #     while true; do
+    #     echo "📂 Contenido de /scripts:"
+    #     ls -la /scripts
+    #     echo "⌛ Esperando 40 segundos..."
+    #     sleep 40
+    #     done
     tty: true
+    restart: unless-stopped
     networks:
       - microservices-net
     depends_on:
