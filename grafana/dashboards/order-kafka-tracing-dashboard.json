@@ -1,0 +1,151 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": null,
+    "title": "Order Service - Kafka Producer & Tracing",
+    "tags": [
+      "kafka",
+      "zipkin",
+      "order-service"
+    ],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 80
+        },
+        "id": 20,
+        "title": "Kafka Producer - Mensajes enviados",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(kafka_producer_record_send_total{client_id=~\".*order.*\"}[1m])",
+            "interval": "",
+            "legendFormat": "{{client_id}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 80
+        },
+        "id": 21,
+        "title": "Kafka Producer - Errores",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(kafka_producer_record_error_total{client_id=~\".*order.*\"}[1m])",
+            "interval": "",
+            "legendFormat": "{{client_id}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 88
+        },
+        "id": 22,
+        "title": "Zipkin - Cantidad de trazas (order-service)",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(zipkin_spans_total{service_name=\"order-service\"}[1m])",
+            "interval": "",
+            "legendFormat": "{{operation}}",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": []
+    }
+  },
+  "overwrite": true
+}

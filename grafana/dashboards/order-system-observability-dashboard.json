@@ -1,0 +1,326 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": null,
+    "title": "Order System - Observabilidad Unificada",
+    "tags": [
+      "resilience",
+      "kafka",
+      "zipkin",
+      "order-service",
+      "inventory",
+      "notification"
+    ],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 400
+        },
+        "id": 101,
+        "title": "\ud83d\udcca CircuitBreaker - Llamadas (Success/Failure/Fallback)",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(resilience4j_circuitbreaker_calls_total{name=\"inventoryServiceCB\", application=\"order-service\"}[1m])",
+            "interval": "",
+            "legendFormat": "{{kind}} - {{outcome}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 408
+        },
+        "id": 102,
+        "title": "\ud83d\udcc8 CircuitBreaker - Tasa de Fallos",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "resilience4j_circuitbreaker_failure_rate{name=\"inventoryServiceCB\", application=\"order-service\"}",
+            "interval": "",
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 408
+        },
+        "id": 103,
+        "title": "\ud83d\udcac Kafka Producer - Order Service",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(kafka_producer_record_send_total{client_id=~\".*order.*\"}[1m])",
+            "interval": "",
+            "legendFormat": "{{client_id}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 416
+        },
+        "id": 104,
+        "title": "\u26a0\ufe0f Kafka Producer Errors - Order Service",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(kafka_producer_record_error_total{client_id=~\".*order.*\"}[1m])",
+            "interval": "",
+            "legendFormat": "{{client_id}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 416
+        },
+        "id": 105,
+        "title": "\ud83d\udce5 Kafka Consumer - Inventory",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(kafka_consumer_consume_total{client_id=~\".*inventory.*\"}[1m])",
+            "interval": "",
+            "legendFormat": "{{client_id}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 424
+        },
+        "id": 106,
+        "title": "\ud83d\udce5 Kafka Consumer - Notification",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(kafka_consumer_consume_total{client_id=~\".*notification.*\"}[1m])",
+            "interval": "",
+            "legendFormat": "{{client_id}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 424
+        },
+        "id": 107,
+        "title": "\ud83d\udd0e Zipkin - Trazas de Order Service",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(zipkin_spans_total{service_name=\"order-service\"}[1m])",
+            "interval": "",
+            "legendFormat": "{{operation}}",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": []
+    }
+  },
+  "overwrite": true
+}

@@ -1,0 +1,237 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": null,
+    "title": "Order Service Resilience",
+    "tags": [
+      "resilience4j",
+      "order-service",
+      "demo"
+    ],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "id": 1,
+        "title": "Llamadas por tipo (success/failure/fallback)",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(resilience4j_circuitbreaker_calls_total{name=\"inventoryServiceCB\", application=\"order-service\"}[1m])",
+            "interval": "",
+            "legendFormat": "{{kind}} - {{outcome}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "id": 2,
+        "title": "Tasa de Fallos (%)",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "resilience4j_circuitbreaker_failure_rate{name=\"inventoryServiceCB\", application=\"order-service\"}",
+            "interval": "",
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        },
+        "id": 3,
+        "title": "Estado del Circuit Breaker",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "resilience4j_circuitbreaker_state{name=\"inventoryServiceCB\", application=\"order-service\"}",
+            "interval": "",
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        },
+        "id": 4,
+        "title": "Retries ejecutados",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(resilience4j_retry_calls_total{name=\"inventoryServiceCB\", application=\"order-service\"}[1m])",
+            "interval": "",
+            "legendFormat": "{{result}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA1CFB4B7F04844"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        },
+        "id": 5,
+        "title": "Fallbacks personalizados (si usas MeterRegistry)",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(order_service_fallbacks[1m])",
+            "interval": "",
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": []
+    }
+  },
+  "overwrite": true
+}
