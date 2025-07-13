@@ -17,7 +17,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s # Give Zookeeper some time to start
+      start_period: 30s # Give Zookeeper some time to start
 
   # -----------------------------
   # Kafka Broker
@@ -98,7 +98,7 @@ services:
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9411/health"] # Zipkin health endpoint
+      test: wget --spider -q http://localhost:9411/health || exit 1 # Zipkin health endpoint
       interval: 10s
       timeout: 5s
       retries: 5
@@ -117,7 +117,7 @@ services:
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9090/-/ready"] # Prometheus ready check
+      test: wget --spider -q http://localhost:9090/-/healthy || exit 1 # Prometheus ready check
       interval: 10s
       timeout: 5s
       retries: 5
@@ -169,10 +169,10 @@ services:
   # Promtail to ship logs to Loki
   # -----------------------------
   promtail:
-    image: grafana/promtail:2.9.1
+    image: promtail-custom:2.9.1  # Imagen personalizada construida con Dockerfile (con wget incluido)
     depends_on:
       loki:
-        condition: service_healthy # Promtail needs Loki to be ready
+        condition: service_healthy  # Promtail necesita que Loki esté listo
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/log:/var/log:ro
@@ -183,12 +183,12 @@ services:
     networks:
       - microservices-net
     healthcheck:
-      # Usamos wget en lugar de curl
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:9080/ready || exit 1"] # Promtail readiness endpoint (default port if not changed in config)
+      test:  ["CMD-SHELL", "/usr/bin/wget --spider -q http://localhost:9080/ready || exit 1"] # Promtail ready check
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+
 
 
   # -----------------------------
