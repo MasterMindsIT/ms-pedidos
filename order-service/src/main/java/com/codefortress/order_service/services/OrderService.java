@@ -4,12 +4,15 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.codefortress.order_service.config.InventoryClient;
 import com.codefortress.order_service.config.OrderEventProducer;
 import com.codefortress.order_service.entities.Order;
 
+import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.AllArgsConstructor;
@@ -27,32 +30,39 @@ public class OrderService {
     
 
     @CircuitBreaker(name = "inventoryServiceCB", fallbackMethod = "fallbackGetStock")
-    @Retry(name = "inventoryServiceCB")
-    public Order createOrder(String productId, Integer quantity) {
-        logger.info("Verificando stock para producto: {} cantidad solicitada: {}", productId, quantity);
+@Retry(name = "inventoryServiceCB")
+public Order createOrder(String productId, Integer quantity) {
+    logger.info("Verificando stock para producto: {} cantidad solicitada: {}", productId, quantity);
 
-        Integer availableStock = inventoryClient.getStock(productId);
+    Integer availableStock;
 
+    try {
+        availableStock = inventoryClient.getStock(productId);
         logger.info("Stock disponible para producto {}: {}", productId, availableStock);
-
-        if (availableStock == null || availableStock < quantity) {
-            throw new IllegalStateException("No hay suficiente stock disponible.");
-        }
-
-        Order newOrder = new Order(
-            UUID.randomUUID().toString(),
-            productId,
-            quantity,
-            "CREATED"
-        );
-
-        // Enviar evento Kafka
-        orderEventProducer.sendOrderCreatedEvent(newOrder.getId());
-
-        logger.info("Orden creada y evento publicado en Kafka: {}", newOrder.getId());
-
-        return newOrder;
+    } catch (FeignException.NotFound ex) {
+        logger.warn("Producto no encontrado en inventario: {}", productId);
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no disponible en inventario");
     }
+
+    if (availableStock == null || availableStock < quantity) {
+        throw new IllegalStateException("No hay suficiente stock disponible.");
+    }
+
+    Order newOrder = new Order(
+        UUID.randomUUID().toString(),
+        productId,
+        quantity,
+        "CREATED"
+    );
+
+    // Enviar evento Kafka
+    orderEventProducer.sendOrderCreatedEvent(newOrder.getId());
+
+    logger.info("Orden creada y evento publicado en Kafka: {}", newOrder.getId());
+
+    return newOrder;
+}
+
 
     /**
      * Fallback method ejecutado si falla el Circuit Breaker o los retries.

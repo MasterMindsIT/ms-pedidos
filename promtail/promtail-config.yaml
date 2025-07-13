@@ -16,3 +16,6 @@ scrape_configs:
         labels:
           job: varlogs
           __path__: /var/lib/docker/containers/*/*.log
+
+    pipeline_stages:
+      - docker: {}
