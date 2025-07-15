@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface InventoryClient {
 
     @GetMapping("/api/inventory/{productId}")
-    Integer getStock(@PathVariable("productId") String productId);
+    Integer getStock(@PathVariable("productId") Integer productId);
 }

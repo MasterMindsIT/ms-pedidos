@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.codefortress.order_service.config.InventoryClient;
 import com.codefortress.order_service.config.OrderEventProducer;
+import com.codefortress.order_service.dtos.OrderEvent;
 import com.codefortress.order_service.entities.Order;
 
 import feign.FeignException;
@@ -31,7 +32,7 @@ public class OrderService {
 
     @CircuitBreaker(name = "inventoryServiceCB", fallbackMethod = "fallbackGetStock")
 @Retry(name = "inventoryServiceCB")
-public Order createOrder(String productId, Integer quantity) {
+public OrderEvent createOrder(Integer productId, Integer quantity) {
     logger.info("Verificando stock para producto: {} cantidad solicitada: {}", productId, quantity);
 
     Integer availableStock;
@@ -48,17 +49,16 @@ public Order createOrder(String productId, Integer quantity) {
         throw new IllegalStateException("No hay suficiente stock disponible.");
     }
 
-    Order newOrder = new Order(
+    OrderEvent newOrder = new OrderEvent(
         UUID.randomUUID().toString(),
         productId,
-        quantity,
-        "CREATED"
+        quantity
     );
 
     // Enviar evento Kafka
-    orderEventProducer.sendOrderCreatedEvent(newOrder.getId());
+    orderEventProducer.sendOrderCreatedEvent(newOrder);
 
-    logger.info("Orden creada y evento publicado en Kafka: {}", newOrder.getId());
+    logger.info("Orden creada y evento publicado en Kafka: {}", newOrder.getOrderId());
 
     return newOrder;
 }

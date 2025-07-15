@@ -2,10 +2,10 @@ package com.codefortress.inventory_service.dtos;
 
 public class OrderEvent {
     private String orderId;
-    private String productId;
+    private Integer productId;
     private Integer quantity;
     
-    public OrderEvent(String orderId, String productId, Integer quantity) {
+    public OrderEvent(String orderId, Integer productId, Integer quantity) {
         this.orderId = orderId;
         this.productId = productId;
         this.quantity = quantity;
@@ -13,7 +13,7 @@ public class OrderEvent {
     public String getOrderId() {
         return orderId;
     }
-    public String getProductId() {
+    public Integer getProductId() {
         return productId;
     }
     public Integer getQuantity() {
@@ -22,7 +22,7 @@ public class OrderEvent {
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
-    public void setProductId(String productId) {
+    public void setProductId(Integer productId) {
         this.productId = productId;
     }
     public void setQuantity(Integer quantity) {

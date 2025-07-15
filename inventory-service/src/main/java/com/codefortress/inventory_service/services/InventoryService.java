@@ -14,19 +14,19 @@ public class InventoryService {
     private static final Logger logger = LoggerFactory.getLogger(InventoryService.class);
 
     // Mapa de productos con stock mutable
-    private final Map<String, Integer> stock = new HashMap<>();
-     private int requestCount = 1;
+    private final Map<Integer, Integer> stock = new HashMap<>();
+     private int requestCount = 11;
 
     public InventoryService() {
         // Cargar datos simulados
-        stock.put("product-1", 10_000);
-        stock.put("product-2", 50_000);
-        stock.put("product-3", 20_000);
+        stock.put(1, 10_000);
+        stock.put(2, 50_000);
+        stock.put(3, 20_000);
     }
     /**
      * Consulta cuántas unidades hay de un producto.
      */
-    public Integer getStock(String productId) {
+    public Integer getStock(Integer productId) {
         requestCount++;
 
         logger.info("Petición número {} para producto {}", requestCount, productId);
@@ -58,7 +58,7 @@ public class InventoryService {
     /**
      * Decrementa el stock disponible.
      */
-    public void decrementStock(String productId, Integer quantity) {
+    public void decrementStock(Integer productId, Integer quantity) {
         stock.computeIfPresent(productId, (k, v) -> Math.max(v - quantity, 0));
         logger.info("Stock actualizado de {}: {}", productId, stock.get(productId));
     }

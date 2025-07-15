@@ -22,7 +22,7 @@ public class InventoryController {
      * Endpoint para consultar stock.
      */
     @GetMapping("/{productId}")
-    public ResponseEntity<Integer> getStock(@PathVariable String productId) {
+    public ResponseEntity<Integer> getStock(@PathVariable Integer productId) {
         Integer stock = inventoryService.getStock(productId);
         if (stock == null) {
             return ResponseEntity.notFound().build();
