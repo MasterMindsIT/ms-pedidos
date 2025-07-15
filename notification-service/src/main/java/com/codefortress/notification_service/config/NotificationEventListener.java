@@ -9,14 +9,18 @@ import org.springframework.stereotype.Service;
 import com.codefortress.notification_service.dtos.OrderEvent;
 import com.codefortress.notification_service.services.NotificationService;
 
+import io.micrometer.core.instrument.MeterRegistry;
+
 @Service
 public class NotificationEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationEventListener.class);
+    private final MeterRegistry meterRegistry;
     private final NotificationService notificationService;
 
-    public NotificationEventListener(NotificationService notificationService) {
+    public NotificationEventListener(NotificationService notificationService, MeterRegistry meterRegistry) {
         this.notificationService = notificationService;
+        this.meterRegistry = meterRegistry;
     }
 
     @KafkaListener(
@@ -27,12 +31,12 @@ public class NotificationEventListener {
     public void handleOrderCreated(OrderEvent orderEvent, Acknowledgment ack) {
         logger.info("Recibido evento de orden creada: {}", orderEvent.getOrderId());
         try {
-            notificationService.publicEmail(orderEvent);
-            ack.acknowledge(); // Confirmamos a Kafka que procesamos el evento
+            notificationService.publicEmail(orderEvent); 
         } catch (Exception e) {
             logger.error("Error procesando evento de orden: {}", orderEvent.getOrderId(), e);
-            // Aquí decides si haces un reintento, envías a DLQ o solo logueas.
-            // Si NO llamas a ack.acknowledge(), Kafka reintentará.
+            //meterRegistry.counter("notification.errors", "type", "simulated", "productId", "example") si hay algo que se quiera medir
+        } finally {
+            ack.acknowledge(); // Siempre confirmar, incluso en error, para evitar el loop 
         }
     }
 }

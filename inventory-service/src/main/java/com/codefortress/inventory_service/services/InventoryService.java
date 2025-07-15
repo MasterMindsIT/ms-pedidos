@@ -29,13 +29,13 @@ public class InventoryService {
     public Integer getStock(Integer productId) {
         requestCount++;
 
-        logger.info("Petición número {} para producto {}", requestCount, productId);
+        logger.info("Request número {} para producto {}", requestCount, productId);
 
         // Cada bloque de 100 peticiones, falla de la 0-5 del ciclo
         int cycle = requestCount % 100;
 
         if (cycle >= 0 && cycle <= 5) {
-            logger.warn("Simulando error en ciclo {}, petición {}", cycle, requestCount);
+            logger.warn("Simulando error en ciclo {}, request {}", cycle, requestCount);
             throw new RuntimeException("Error simulado en InventoryService");
         }
         // Simular un retraso de 100 ms
