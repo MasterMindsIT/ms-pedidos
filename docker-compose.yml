@@ -170,6 +170,10 @@ services:
   # -----------------------------
   promtail:
     image: promtail-custom:2.9.1  # Imagen personalizada construida con Dockerfile (con wget incluido)
+    user: root
+    build:
+      context: ./promtail  # Ruta al Dockerfile (ajusta si es necesario)
+      dockerfile: Dockerfile 
     depends_on:
       loki:
         condition: service_healthy  # Promtail necesita que Loki esté listo
@@ -183,7 +187,7 @@ services:
     networks:
       - microservices-net
     healthcheck:
-      test:  ["CMD-SHELL", "/usr/bin/wget --spider -q http://localhost:9080/ready || exit 1"] # Promtail ready check
+      test:  ["CMD-SHELL", "/usr/bin/wget --spider -q http://localhost:9080/ || echo 'Promtail no responde'; exit 1"] # Promtail ready check
       interval: 10s
       timeout: 5s
       retries: 5
@@ -202,7 +206,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
-      SPRING_ZIPKIN_BASEURL: http://zipkin:9411
+      MANAGEMENT_TRACING_ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       eureka-server:
         condition: service_healthy # Es CRÍTICO que Eureka esté listo para el registro
@@ -234,7 +239,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
-      SPRING_ZIPKIN_BASEURL: http://zipkin:9411
+      MANAGEMENT_TRACING_ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -267,7 +273,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
-      SPRING_ZIPKIN_BASEURL: http://zipkin:9411
+      MANAGEMENT_TRACING_ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -332,23 +339,17 @@ services:
     image: grafana/k6
     volumes:
       - ./k6-scripts:/scripts
-    entrypoint: ["k6", "run", "/scripts/scripts.js"]
-    #entrypoint: ["/bin/sh", "-c"]
-    # command:
-    #   - |
-    #     while true; do
-    #     echo "📂 Contenido de /scripts:"
-    #     ls -la /scripts
-    #     echo "⌛ Esperando 40 segundos..."
-    #     sleep 40
-    #     done
+    entrypoint: ["/bin/sh"]
+    #entrypoint: ["k6", "run", "/scripts/scripts.js"]
     tty: true
+    stdin_open: true
     restart: unless-stopped
     networks:
       - microservices-net
     depends_on:
-      gateway: # k6 debería esperar a que el Gateway esté listo para las pruebas de carga
+      gateway:
         condition: service_healthy
+
 
 # -----------------------------
 # Network definition

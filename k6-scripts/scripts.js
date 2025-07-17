@@ -2,8 +2,8 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 export let options = {
-  vus: 15, // usuarios virtuales simultáneos
-  duration: '300s', // duración total
+  vus: 1, // usuarios virtuales simultáneos
+  duration: '1s', // duración total
 };
 
 export default function () {

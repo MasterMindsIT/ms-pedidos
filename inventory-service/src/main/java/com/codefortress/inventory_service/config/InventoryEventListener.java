@@ -27,7 +27,7 @@ public class InventoryEventListener {
     topics = "order-created",
     groupId = "inventory-group",
     containerFactory = "kafkaListenerContainerFactoryManualAck"
-    )
+)
     public void handleOrderCreated(OrderEvent orderEvent, Acknowledgment ack) {
         logger.info("Recibido evento de orden creada: {}", orderEvent.getOrderId());
 

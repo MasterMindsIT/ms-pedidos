@@ -9,18 +9,18 @@ import org.springframework.stereotype.Service;
 import com.codefortress.notification_service.dtos.OrderEvent;
 import com.codefortress.notification_service.services.NotificationService;
 
-import io.micrometer.core.instrument.MeterRegistry;
+//import io.micrometer.core.instrument.MeterRegistry;
 
 @Service
 public class NotificationEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationEventListener.class);
-    private final MeterRegistry meterRegistry;
+    //private final MeterRegistry meterRegistry;
     private final NotificationService notificationService;
 
-    public NotificationEventListener(NotificationService notificationService, MeterRegistry meterRegistry) {
+    public NotificationEventListener(NotificationService notificationService) {
         this.notificationService = notificationService;
-        this.meterRegistry = meterRegistry;
+        //this.meterRegistry = meterRegistry;
     }
 
     @KafkaListener(

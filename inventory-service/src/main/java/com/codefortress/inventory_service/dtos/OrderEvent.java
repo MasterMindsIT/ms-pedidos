@@ -5,6 +5,10 @@ public class OrderEvent {
     private Integer productId;
     private Integer quantity;
     
+    public OrderEvent() {
+        // Default constructor
+    }
+     
     public OrderEvent(String orderId, Integer productId, Integer quantity) {
         this.orderId = orderId;
         this.productId = productId;
